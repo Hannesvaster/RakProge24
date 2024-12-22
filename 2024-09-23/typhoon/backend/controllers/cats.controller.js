@@ -26,21 +26,44 @@ exports.create = (req, res) => {
 
   const newCat = {
     id: crypto.randomUUID(),
-    name: name,
+    name,
     createdAt: Date.now(),
     updatedAt: null,
     deleted: false,
   };
 
   cats.push(newCat);
-
   res.send(newCat);
 };
 
 exports.read = (req, res) => {
-  res.send(cats);
+  res.send(cats.filter(cat => !cat.deleted));
 };
 
-exports.update = (req, res) => {};
+exports.update = (req, res) => {
+  const { id, name } = req.body;
 
-exports.delete = (req, res) => {};
+  const cat = cats.find(cat => cat.id === id);
+  if (!cat) {
+    return res.status(404).send({ type: "Error", message: "Cat not found" });
+  }
+
+  if (name && name !== "") {
+    cat.name = name;
+  }
+  cat.updatedAt = Date.now();
+
+  res.send(cat);
+};
+
+exports.delete = (req, res) => {
+  const { id } = req.body;
+
+  const catIndex = cats.findIndex(cat => cat.id === id);
+  if (catIndex === -1) {
+    return res.status(404).send({ type: "Error", message: "Cat not found" });
+  }
+
+  cats[catIndex].deleted = true;
+  res.send({ message: "Cat marked as deleted" });
+};
